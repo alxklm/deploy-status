@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deployment Status</title>
+  <style>
+    body {
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .card {
+      background: #1e293b;
+      border-radius: 1rem;
+      padding: 2rem 3rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+    }
+
+    .service {
+      margin: 1rem 0;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      background: #0f172a;
+    }
+
+    .status {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+
+    .success { color: #22c55e; }
+    .failure { color: #ef4444; }
+    .in_progress { color: #f59e0b; }
+
+    .timestamp {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-top: 0.3rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Deployment Status</h1>
+    <div id="services"></div>
+  </div>
+
+  <script>
+    const services = ['backend', 'frontend'];
+
+    async function loadService(name) {
+      try {
+        const res = await fetch(`${name}.json?cache=` + Date.now());
+        if (!res.ok) throw new Error('no file');
+        const data = await res.json();
+        return data;
+      } catch {
+        return { status: 'unknown', service: name, timestamp: '' };
+      }
+    }
+
+    async function render() {
+      const container = document.getElementById('services');
+      container.innerHTML = '';
+      for (const name of services) {
+        const data = await loadService(name);
+        const div = document.createElement('div');
+        div.className = 'service';
+        div.innerHTML = `
+          <div><strong>${data.service.toUpperCase()}</strong></div>
+          <div class="status ${data.status}">${data.status.toUpperCase()}</div>
+          <div class="timestamp">${data.timestamp ? new Date(data.timestamp).toLocaleString() : ''}</div>
+        `;
+        container.appendChild(div);
+      }
+    }
+
+    render();
+    setInterval(render, 30000);
+  </script>
+</body>
+</html>
